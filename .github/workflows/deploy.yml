@@ -1,0 +1,140 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: dev
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Prepare deployment files
+      run: |
+        # Create a clean deployment directory
+        mkdir -p deploy-temp
+        # Copy files excluding unwanted directories
+        rsync -av --exclude='.git' --exclude='node_modules' --exclude='.env*' --exclude='logs' --exclude='*.log' --exclude='deploy-temp' . deploy-temp/
+        # Create tar.gz for deployment
+        cd deploy-temp
+        tar -czf ../deployment.tar.gz .
+        cd ..
+
+    - name: Copy files to VPS
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT || 22 }}
+        source: "deployment.tar.gz"
+        target: "/home/nicolic3/balancechile.nicolich.cl/"
+        strip_components: 0
+        overwrite: true
+
+    - name: Deploy to VPS
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USERNAME }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        port: ${{ secrets.VPS_PORT || 22 }}
+        script: |
+          # Navegar al directorio del proyecto Balance Chile
+          cd /home/nicolic3/balancechile.nicolich.cl/
+          whoami
+          pwd
+          ls -la
+          
+          # Configurar variables de entorno para producción
+          export NODE_ENV=production
+          echo "🔧 NODE_ENV configurado como: $NODE_ENV"
+          
+          # Extraer archivo de despliegue si existe
+          if [ -f "deployment.tar.gz" ]; then
+            echo "📦 Extrayendo archivo de despliegue..."
+            tar -xzf deployment.tar.gz
+            rm deployment.tar.gz
+            echo "✅ Archivo extraído exitosamente"
+          else
+            echo "ℹ️  No se encontró deployment.tar.gz, continuando con archivos existentes"
+          fi
+          
+          # Verificar si npm está disponible
+          if command -v npm >/dev/null 2>&1; then
+            echo "📦 Instalando dependencias del backend..."
+            cd backend
+            npm ci --production --silent
+            echo "✅ Dependencias del backend instaladas"
+            
+            echo "📦 Instalando dependencias del frontend..."
+            cd ../frontend
+            npm ci --production --silent
+            echo "✅ Dependencias del frontend instaladas"
+            
+            echo "🏗️  Construyendo aplicación frontend..."
+            npm run build
+            echo "✅ Frontend construido exitosamente"
+            
+            cd ..
+            
+            # Verificar dependencias específicas
+            echo "🔍 Verificando dependencias críticas..."
+            cd backend
+            npm list express cors helmet compression || npm install express cors helmet compression
+            npm list axios node-cron swagger-jsdoc swagger-ui-express || npm install axios node-cron swagger-jsdoc swagger-ui-express
+            cd ..
+          else
+            echo "⚠️  npm no está disponible en el servidor"
+            echo "💡 Instrucciones para instalar dependencias:"
+            echo "   1. Accede a cPanel"
+            echo "   2. Ve a 'Node.js Selector' o 'Node.js Apps'"
+            echo "   3. Selecciona tu aplicación Balance Chile"
+            echo "   4. Ejecuta: cd backend && npm install --production"
+            echo "   5. Ejecuta: cd ../frontend && npm install --production && npm run build"
+            echo "   6. Reinicia la aplicación desde cPanel"
+          fi
+          
+          # Verificar archivos importantes del proyecto
+          echo "📋 Verificando estructura del proyecto Balance Chile..."
+          if [ -f "package.json" ]; then
+            echo "✅ package.json raíz encontrado"
+          fi
+          if [ -f "backend/package.json" ]; then
+            echo "✅ backend/package.json encontrado"
+          fi
+          if [ -f "frontend/package.json" ]; then
+            echo "✅ frontend/package.json encontrado"
+          fi
+          if [ -f "backend/src/server.js" ]; then
+            echo "✅ Servidor backend encontrado"
+          fi
+          if [ -f "frontend/dist/index.html" ] || [ -f "frontend/build/index.html" ]; then
+            echo "✅ Build del frontend encontrado"
+          fi
+          if [ -f "docker-compose.yml" ]; then
+            echo "✅ docker-compose.yml encontrado"
+          fi
+          if [ -f "backend/config.env" ]; then
+            echo "✅ Configuración del backend encontrada"
+          else
+            echo "⚠️  backend/config.env no encontrado - asegúrate de configurarlo en cPanel"
+          fi
+          
+          # Verificar archivos de documentación
+          if [ -f "README.md" ]; then
+            echo "✅ README.md encontrado"
+          fi
+          if [ -f "INTEGRACION_APIS.md" ]; then
+            echo "✅ Documentación de APIs encontrada"
+          fi
+          
+          echo "🎉 ¡Despliegue de Balance Chile completado!"
+          echo "📍 Directorio: /home/nicolic3/balancechile.nicolich.cl/"
+          echo "🔗 Siguiente paso: Reinicia la aplicación desde cPanel Node.js"
+          echo "📊 Proyecto: Sistema de visualización de presupuesto chileno"
+          echo "🏗️  Arquitectura: React Frontend + Node.js Backend + APIs gubernamentales"
