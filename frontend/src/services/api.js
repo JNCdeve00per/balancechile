@@ -50,6 +50,8 @@ export const budgetApi = {
   getMinistries: (year = 2024, sort = 'budget', order = 'desc') => 
     api.get(`/budget/ministries?year=${year}&sort=${sort}&order=${order}`),
   getExpenses: (year = 2024) => api.get(`/budget/expenses?year=${year}`),
+  getAgricultureDetails: (year = 2024) => api.get(`/budget/agriculture-details?year=${year}`),
+  getDataSources: (year = null) => api.get(`/budget/data-sources${year ? `?year=${year}` : ''}`),
 }
 
 export const economicApi = {

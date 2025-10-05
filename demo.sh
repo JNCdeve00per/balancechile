@@ -75,3 +75,7 @@ echo "   API Docs: http://localhost:3001/api-docs"
 echo ""
 echo "💡 Prueba cambiar el año en la interfaz para ver los datos actualizarse dinámicamente!"
 
+
+
+
+

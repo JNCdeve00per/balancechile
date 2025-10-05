@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { 
   ArrowLeft, 
@@ -6,7 +6,10 @@ import {
   Users, 
   Briefcase, 
   TrendingUp,
-  Calendar
+  Calendar,
+  ExternalLink,
+  AlertTriangle,
+  Info
 } from 'lucide-react'
 import {
   BarChart,
@@ -23,16 +26,38 @@ import {
   Line
 } from 'recharts'
 import { useMinistry } from '../hooks/useApi'
+import { budgetApi } from '../services/api'
 import { LoadingSpinner, ErrorMessage } from '../components/common/LoadingStates'
 import { formatCurrency, formatPercentage, generateColors } from '../utils/formatters'
 
 const MinistryDetail = () => {
   const { code } = useParams()
   const [selectedYear, setSelectedYear] = useState(2025)
+  const [agricultureDetails, setAgricultureDetails] = useState(null)
+  const [loadingAgriculture, setLoadingAgriculture] = useState(false)
   
   const { data: ministryData, isLoading, error, refetch } = useMinistry(code, selectedYear)
 
-  const years = [2025, 2024, 2023, 2022, 2021, 2020]
+  // Fetch detailed agriculture data if this is the agriculture ministry
+  useEffect(() => {
+    if (code === 'AGRICULTURA' && selectedYear === 2024) {
+      setLoadingAgriculture(true)
+      budgetApi.getAgricultureDetails(selectedYear)
+        .then(response => {
+          setAgricultureDetails(response.data.data)
+        })
+        .catch(error => {
+          console.error('Error fetching agriculture details:', error)
+        })
+        .finally(() => {
+          setLoadingAgriculture(false)
+        })
+    } else {
+      setAgricultureDetails(null)
+    }
+  }, [code, selectedYear])
+
+  const years = [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014, 2013, 2012, 2011, 2010]
 
   if (isLoading) {
     return <LoadingSpinner text="Cargando detalles del ministerio..." />

@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Ministries from './pages/Ministries'
 import MinistryDetail from './pages/MinistryDetail'
 import Economic from './pages/Economic'
+import DataSources from './pages/DataSources'
 import About from './pages/About'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Route path="/ministries" element={<Ministries />} />
         <Route path="/ministry/:code" element={<MinistryDetail />} />
         <Route path="/economic" element={<Economic />} />
+        <Route path="/data-sources" element={<DataSources />} />
         <Route path="/about" element={<About />} />
       </Routes>
     </Layout>
