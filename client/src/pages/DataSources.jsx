@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { ExternalLink, CheckCircle, Calendar, Database, TrendingUp } from 'lucide-react'
+import { ExternalLink, CheckCircle, Calendar, Database, TrendingUp, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { budgetApi } from '../services/api'
 import { LoadingSpinner, ErrorMessage } from '../components/common/LoadingStates'
 import { formatCurrency } from '../utils/formatters'
@@ -83,6 +84,29 @@ const DataSources = () => {
         <p className="text-gray-600 mt-2">
           Transparencia y trazabilidad de los datos utilizados en Balance Chile
         </p>
+      </div>
+
+      {/* BCN Integration Banner */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <Database className="w-8 h-8" />
+              <h2 className="text-2xl font-bold">Integración BCN Activa</h2>
+            </div>
+            <p className="text-blue-100 mb-4">
+              Ahora puedes acceder a los datos oficiales de la Biblioteca del Congreso Nacional de Chile 
+              directamente desde nuestra plataforma. Información detallada de partidas presupuestarias 
+              para todos los años disponibles (2010-2026).
+            </p>
+            <Link 
+              to="/bcn"
+              className="inline-flex items-center gap-2 bg-white text-blue-700 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+            >
+              Ver Datos BCN <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Current Status Overview */}

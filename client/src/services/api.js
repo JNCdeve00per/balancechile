@@ -55,6 +55,10 @@ export const budgetApi = {
   getExpenses: (year = 2024) => api.get(`/budget/expenses?year=${year}`),
   getAgricultureDetails: (year = 2024) => api.get(`/budget/agriculture-details?year=${year}`),
   getDataSources: (year = null) => api.get(`/budget/data-sources${year ? `?year=${year}` : ''}`),
+  // BCN endpoints
+  getBcnData: (year = 2024) => api.get(`/budget/bcn?year=${year}`),
+  getBcnAvailability: () => api.get(`/budget/bcn/availability`),
+  getBcnYears: () => api.get(`/budget/bcn/years`),
 }
 
 export const economicApi = {

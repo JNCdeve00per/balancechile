@@ -27,6 +27,7 @@ npm run install:all
 |---------|-------------|
 | **INICIO_RAPIDO.md** | Guía de inicio rápido |
 | **ESTRUCTURA.md** | Arquitectura del proyecto |
+| **INTEGRACION_BCN.md** | 🆕 Integración con BCN (Biblioteca del Congreso Nacional) |
 | **DEPLOY_CPANEL.md** | Guía de despliegue en cPanel |
 | **CPANEL_PASO_A_PASO.md** | Instrucciones visuales |
 | **CHECKLIST.md** | Lista de verificación |
@@ -48,12 +49,28 @@ Balance Chile es una plataforma web que democratiza el acceso a la información 
 - ✅ **Sin problemas de CORS**
 - ✅ **Fácil de desplegar** en cPanel
 - ✅ **Desarrollo flexible** (frontend y backend separados)
+- ✅ **🆕 Integración BCN**: Datos oficiales de la Biblioteca del Congreso Nacional
 - ✅ **Datos Oficiales**: BCN, DIPRES, Banco Central
 - ✅ **Visualizaciones Interactivas**: Gráficos con Recharts
 - ✅ **Cache Inteligente**: NodeCache para rendimiento
 - ✅ **API REST Documentada**: Swagger/OpenAPI
 - ✅ **Responsive Design**: TailwindCSS
 - ✅ **Open Source**: Licencia MIT
+
+## 🆕 Integración BCN (Biblioteca del Congreso Nacional)
+
+Balance Chile ahora se integra directamente con el sitio oficial de la BCN para obtener datos presupuestarios en tiempo real:
+
+- **📊 Datos Oficiales**: Información directa desde https://www.bcn.cl/presupuesto
+- **📅 Años Disponibles**: 2010 - 2026 (histórico completo)
+- **💰 Detalle de Partidas**: Presupuesto aprobado, modificaciones, vigente y devengado
+- **📈 Ejecución Presupuestaria**: Porcentajes de ejecución por partida
+- **🔄 Actualización Automática**: Cache de 24 horas con fallback inteligente
+- **🎯 Prioridad de Fuentes**: BCN → DIPRES → Datos Mock
+
+**Ver documentación completa**: [INTEGRACION_BCN.md](./INTEGRACION_BCN.md)
+
+**Acceso en la app**: `/bcn` o menú "Datos BCN"
 
 ## 🛠️ Stack Tecnológico
 

@@ -5,6 +5,7 @@ import Ministries from './pages/Ministries'
 import MinistryDetail from './pages/MinistryDetail'
 import Economic from './pages/Economic'
 import DataSources from './pages/DataSources'
+import BcnData from './pages/BcnData'
 import About from './pages/About'
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/ministry/:code" element={<MinistryDetail />} />
         <Route path="/economic" element={<Economic />} />
         <Route path="/data-sources" element={<DataSources />} />
+        <Route path="/bcn" element={<BcnData />} />
         <Route path="/about" element={<About />} />
       </Routes>
     </Layout>

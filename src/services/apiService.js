@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cacheService = require('./cacheService');
+const bcnService = require('./bcnService');
 
 class ApiService {
   constructor() {
@@ -379,33 +380,77 @@ class ApiService {
     };
   }
 
-  // Método para obtener datos reales de APIs oficiales (futuro)
+  // Método para obtener datos reales de APIs oficiales
   async getRealBudgetData(year) {
     try {
-      // TODO: Implementar llamadas a APIs reales
-      // Ejemplos de endpoints que podrían existir:
-      
-      // 1. DIPRES API
-      // const dipresUrl = `https://www.dipres.gob.cl/api/presupuesto/${year}`;
-      
-      // 2. BCN API  
-      // const bcnUrl = `https://www.bcn.cl/api/presupuesto/${year}`;
-      
-      // 3. Datos Abiertos
-      // const datosGovUrl = `https://datos.gob.cl/api/3/action/datastore_search?resource_id=presupuesto-${year}`;
-      
       console.log(`Attempting to fetch real data for year ${year}...`);
       
-      // Por ahora, usar datos mockeados pero con indicación de que son datos de prueba
+      // 1. Intentar BCN primero (fuente oficial más completa)
+      try {
+        console.log(`Trying BCN for year ${year}...`);
+        const bcnData = await bcnService.getBudgetData(year);
+        
+        if (bcnData && !bcnData.isFallback && bcnData.isRealData) {
+          console.log(`✓ Successfully fetched BCN data for year ${year}`);
+          
+          // Transformar datos de BCN al formato estándar
+          const standardData = bcnService.transformToStandardFormat(bcnData);
+          
+          if (standardData && standardData.ministries && standardData.ministries.length > 0) {
+            // Enriquecer con datos adicionales
+            standardData.bcnRawData = bcnData;
+            standardData.dataSource = 'BCN';
+            standardData.isRealData = true;
+            
+            return standardData;
+          }
+        }
+        
+        console.log(`BCN data not available or incomplete for year ${year}`);
+      } catch (bcnError) {
+        console.warn(`BCN fetch failed for year ${year}:`, bcnError.message);
+      }
+      
+      // 2. Fallback a DIPRES API (si estuviera disponible)
+      // try {
+      //   const dipresUrl = `${this.dipresBaseUrl}/presupuesto/${year}`;
+      //   const response = await this.axiosInstance.get(dipresUrl);
+      //   if (response.data) {
+      //     return this.transformDipresData(response.data, year);
+      //   }
+      // } catch (dipresError) {
+      //   console.warn('DIPRES API failed:', dipresError.message);
+      // }
+      
+      // 3. Fallback a Datos Abiertos (si estuviera disponible)
+      // try {
+      //   const datosGovUrl = `${this.datosGovBaseUrl}/datastore_search`;
+      //   const response = await this.axiosInstance.get(datosGovUrl, {
+      //     params: { resource_id: `presupuesto-${year}`, limit: 1000 }
+      //   });
+      //   if (response.data?.result?.records) {
+      //     return this.transformDatosGovData(response.data.result.records, year);
+      //   }
+      // } catch (datosGovError) {
+      //   console.warn('Datos.gob.cl API failed:', datosGovError.message);
+      // }
+      
+      // 4. Si todo falla, usar datos mock con indicación clara
+      console.log(`Using mock data for year ${year}`);
       const mockData = this.getMockBudgetData(year);
       mockData.isRealData = false;
-      mockData.note = 'Datos de demostración. En producción se conectaría a APIs oficiales.';
+      mockData.dataSource = 'Mock';
+      mockData.note = 'Datos de demostración basados en fuentes oficiales. BCN no disponible para este año.';
       
       return mockData;
       
     } catch (error) {
       console.warn(`Error fetching real data for ${year}, falling back to mock data:`, error.message);
-      return this.getMockBudgetData(year);
+      const mockData = this.getMockBudgetData(year);
+      mockData.isRealData = false;
+      mockData.dataSource = 'Mock';
+      mockData.error = error.message;
+      return mockData;
     }
   }
 
@@ -503,6 +548,32 @@ class ApiService {
       console.error('Error fetching ministry data:', error.message);
       throw error;
     }
+  }
+
+  // Métodos específicos para BCN
+  async getBcnRawData(year) {
+    try {
+      return await bcnService.getBudgetData(year);
+    } catch (error) {
+      console.error('Error fetching BCN raw data:', error.message);
+      throw error;
+    }
+  }
+
+  async checkBcnAvailability() {
+    try {
+      return await bcnService.checkAvailability();
+    } catch (error) {
+      console.error('Error checking BCN availability:', error.message);
+      return {
+        available: false,
+        message: error.message
+      };
+    }
+  }
+
+  getBcnAvailableYears() {
+    return bcnService.getAvailableYears();
   }
 }
 

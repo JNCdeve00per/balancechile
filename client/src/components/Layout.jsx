@@ -20,6 +20,7 @@ const Layout = ({ children }) => {
     { name: 'Dashboard', href: '/', icon: BarChart3 },
     { name: 'Ministerios', href: '/ministries', icon: Building2 },
     { name: 'Economía', href: '/economic', icon: TrendingUp },
+    { name: 'Datos BCN', href: '/bcn', icon: Database },
     { name: 'Fuentes de Datos', href: '/data-sources', icon: Database },
     { name: 'Acerca de', href: '/about', icon: Info },
   ]

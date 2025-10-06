@@ -104,11 +104,14 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
-});
+// Solo hacer listen si NO estamos en Passenger/cPanel
+if (typeof(PhusionPassenger) === 'undefined') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+    console.log(`🏥 Health Check: http://localhost:${PORT}/health`);
+  });
+}
 
 module.exports = app;
 

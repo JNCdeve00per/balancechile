@@ -406,5 +406,164 @@ router.get('/data-sources', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /api/budget/bcn:
+ *   get:
+ *     summary: Obtiene datos crudos de BCN para un año específico
+ *     tags: [Budget]
+ *     parameters:
+ *       - in: query
+ *         name: year
+ *         schema:
+ *           type: integer
+ *         description: Año del presupuesto (default 2024)
+ *     responses:
+ *       200:
+ *         description: Datos de BCN obtenidos exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     year:
+ *                       type: number
+ *                     source:
+ *                       type: string
+ *                     sourceUrl:
+ *                       type: string
+ *                     isRealData:
+ *                       type: boolean
+ *                     totales:
+ *                       type: object
+ *                     partidas:
+ *                       type: array
+ *       500:
+ *         description: Error interno del servidor
+ */
+router.get('/bcn', async (req, res) => {
+  try {
+    const year = parseInt(req.query.year) || 2024;
+    const data = await apiService.getBcnRawData(year);
+    
+    res.json({
+      success: true,
+      data,
+      timestamp: new Date().toISOString(),
+      note: 'Datos crudos de la Biblioteca del Congreso Nacional de Chile'
+    });
+  } catch (error) {
+    console.error('BCN route error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching BCN data',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/budget/bcn/availability:
+ *   get:
+ *     summary: Verifica la disponibilidad del servicio BCN
+ *     tags: [Budget]
+ *     responses:
+ *       200:
+ *         description: Estado del servicio BCN
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     available:
+ *                       type: boolean
+ *                     status:
+ *                       type: number
+ *                     message:
+ *                       type: string
+ */
+router.get('/bcn/availability', async (req, res) => {
+  try {
+    const availability = await apiService.checkBcnAvailability();
+    
+    res.json({
+      success: true,
+      data: availability,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('BCN availability check error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error checking BCN availability',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/budget/bcn/years:
+ *   get:
+ *     summary: Obtiene lista de años disponibles en BCN
+ *     tags: [Budget]
+ *     responses:
+ *       200:
+ *         description: Lista de años disponibles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     years:
+ *                       type: array
+ *                       items:
+ *                         type: number
+ */
+router.get('/bcn/years', async (req, res) => {
+  try {
+    const years = apiService.getBcnAvailableYears();
+    
+    res.json({
+      success: true,
+      data: {
+        years,
+        count: years.length,
+        range: {
+          from: Math.min(...years),
+          to: Math.max(...years)
+        }
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('BCN years route error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error fetching BCN years',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 module.exports = router;
 

@@ -1,4 +1,4 @@
-// app.js - Punto de entrada alternativo para cPanel
+// app.js - Punto de entrada para cPanel/Passenger
 // Este archivo simplemente carga el servidor principal
 
-require('./src/server.js');
+module.exports = require('./src/server.js');
