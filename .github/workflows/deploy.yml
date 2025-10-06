@@ -8,7 +8,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    environment: production
+    environment: dev
     
     steps:
     - name: Checkout code
@@ -75,6 +75,8 @@ jobs:
         target: "/home/nicolic3/balancechile.nicolich.cl/"
         strip_components: 0
         overwrite: true
+        debug: true
+        timeout: 60s
 
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.3
@@ -83,6 +85,8 @@ jobs:
         username: ${{ secrets.VPS_USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT || 22 }}
+        debug: true
+        timeout: 300s
         script: |
           echo "🚀 Iniciando despliegue en VPS..."
           
