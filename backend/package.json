@@ -2,9 +2,9 @@
   "name": "balance-chile",
   "version": "1.0.0",
   "description": "Dashboard del Presupuesto Público de Chile - Full Stack App",
-  "main": "src/server.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node app.js",
     "dev": "nodemon src/server.js",
     "dev:frontend": "cd client && npm run dev",
     "build": "cd client && npm run build",

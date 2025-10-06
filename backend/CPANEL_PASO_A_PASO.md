@@ -98,7 +98,8 @@ Guía visual detallada para configurar Balance Chile en cPanel.
    │ https://tudominio.com                   │
    ├─────────────────────────────────────────┤
    │ Application startup file:               │
-   │ src/server.js                           │
+   │ app.js                                  │
+   │ (o src/server.js si prefieres)          │
    ├─────────────────────────────────────────┤
    │ Passenger log file: (dejar por defecto) │
    └─────────────────────────────────────────┘
