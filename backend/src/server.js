@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 
 // Import routes
 const budgetRoutes = require('./routes/budget');
@@ -16,15 +17,21 @@ const { swaggerSpec, swaggerUi } = require('./config/swagger');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const isProduction = process.env.NODE_ENV === 'production';
 
-// Security middleware
-app.use(helmet());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://balancechile.nicolich.cl', 'http://balancechile.nicolich.cl'] 
-    : ['http://localhost:5173', 'http://localhost:3000'],
-  credentials: true
+// Security middleware - Configuración especial para servir React
+app.use(helmet({
+  contentSecurityPolicy: false, // Desactivar CSP para permitir inline scripts de React
+  crossOriginEmbedderPolicy: false
 }));
+
+// CORS solo necesario en desarrollo cuando frontend corre en puerto diferente
+if (!isProduction) {
+  app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:3000'],
+    credentials: true
+  }));
+}
 
 // Rate limiting
 const limiter = rateLimit({
@@ -60,23 +67,39 @@ app.use('/api/budget', budgetRoutes);
 app.use('/api/economic', economicRoutes);
 app.use('/api/ministry', ministryRoutes);
 
-// Root endpoint
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Balance Chile API',
-    version: '1.0.0',
-    docs: '/api-docs',
-    health: '/health'
+// Servir archivos estáticos de React en producción
+if (isProduction) {
+  const clientBuildPath = path.join(__dirname, '../client/dist');
+  app.use(express.static(clientBuildPath));
+  
+  // Todas las rutas no-API deben servir el index.html de React
+  app.get('*', (req, res, next) => {
+    // Si es una ruta de API, continuar al siguiente handler
+    if (req.path.startsWith('/api') || req.path.startsWith('/health') || req.path.startsWith('/api-docs')) {
+      return next();
+    }
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
-});
+} else {
+  // En desarrollo, mostrar info de la API en la raíz
+  app.get('/', (req, res) => {
+    res.json({
+      message: 'Balance Chile API - Development Mode',
+      version: '1.0.0',
+      docs: '/api-docs',
+      health: '/health',
+      note: 'Run frontend separately with: npm run dev:frontend'
+    });
+  });
+}
 
 // Error handling middleware
 app.use(errorHandler);
 
-// 404 handler
-app.use('*', (req, res) => {
+// 404 handler para rutas de API
+app.use('/api/*', (req, res) => {
   res.status(404).json({
-    error: 'Endpoint not found',
+    error: 'API endpoint not found',
     path: req.originalUrl
   });
 });

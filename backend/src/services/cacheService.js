@@ -10,22 +10,34 @@ class CacheService {
 
   async initRedis() {
     try {
-      if (process.env.REDIS_URL) {
+      // Only attempt Redis connection if explicitly enabled
+      if (process.env.REDIS_URL && process.env.USE_REDIS !== 'false') {
         this.redisClient = redis.createClient({
-          url: process.env.REDIS_URL
+          url: process.env.REDIS_URL,
+          socket: {
+            reconnectStrategy: false // Disable automatic reconnection
+          }
         });
         
         this.redisClient.on('error', (err) => {
-          console.warn('Redis Client Error:', err);
+          console.warn('Redis Client Error:', err.message);
+          if (this.redisClient) {
+            this.redisClient.disconnect().catch(() => {});
+            this.redisClient = null;
+          }
           console.log('Falling back to in-memory cache');
-          this.redisClient = null;
         });
 
         await this.redisClient.connect();
         console.log('✅ Redis connected successfully');
+      } else {
+        console.log('ℹ️  Using in-memory cache (Redis disabled)');
       }
     } catch (error) {
       console.warn('Redis connection failed, using in-memory cache:', error.message);
+      if (this.redisClient) {
+        this.redisClient.disconnect().catch(() => {});
+      }
       this.redisClient = null;
     }
   }

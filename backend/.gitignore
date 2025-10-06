@@ -1,15 +1,16 @@
 # Dependencies
 node_modules/
+client/node_modules/
 
 # Build outputs
-dist/
-build/
+client/dist/
+client/build/
 
 # Environment variables
 .env
 .env.local
-.env.production
-*.env
+.env.production.local
+config.env
 
 # Logs
 logs/
@@ -17,6 +18,7 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids/
@@ -37,8 +39,9 @@ coverage/
 .DS_Store
 
 # Deployment
-*.tar.gz
 deploy-info.txt
+balance-chile-deploy.tar.gz
+*.tar.gz
 
 # Temp files
 tmp/
@@ -46,14 +49,10 @@ temp/
 
 # PM2
 .pm2/
+ecosystem.config.js
 
 # Optional npm cache directory
 .npm
 
 # Optional eslint cache
 .eslintcache
-
-# Directorios deprecados (mantener por si acaso)
-frontend/
-balance-chile-api/
-balance-chile-frontend/
