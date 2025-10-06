@@ -6,30 +6,13 @@ Dashboard interactivo del Presupuesto Público de Chile - Transparencia fiscal p
 ![React](https://img.shields.io/badge/React-18+-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green)
 
-## ⚠️ IMPORTANTE: Proyecto Unificado
-
-Este proyecto ha sido **reorganizado** en una arquitectura full-stack unificada.
-
-### 📁 Todo el código está ahora en el directorio `backend/`
-
-```bash
-# Navegar al proyecto principal
-cd backend
-
-# Ver documentación completa
-cat README.md
-```
-
 ## 🚀 Inicio Rápido
 
 ```bash
-# 1. Ir al directorio principal
-cd backend
-
-# 2. Instalar dependencias
+# 1. Instalar dependencias
 npm run install:all
 
-# 3. Iniciar en desarrollo
+# 2. Iniciar en desarrollo
 ./start-dev.sh
 ```
 
@@ -38,13 +21,10 @@ npm run install:all
 - Backend: http://localhost:3001
 - API Docs: http://localhost:3001/api-docs
 
-## 📚 Documentación Completa
-
-Toda la documentación está en `backend/`:
+## 📚 Documentación
 
 | Archivo | Descripción |
 |---------|-------------|
-| **README.md** | Documentación principal completa |
 | **INICIO_RAPIDO.md** | Guía de inicio rápido |
 | **ESTRUCTURA.md** | Arquitectura del proyecto |
 | **DEPLOY_CPANEL.md** | Guía de despliegue en cPanel |
@@ -91,6 +71,23 @@ Balance Chile es una plataforma web que democratiza el acceso a la información 
 - Documentación Swagger
 - Rate limiting y seguridad
 
+## 🏗️ Estructura del Proyecto
+
+```
+balanceChile/
+├── client/              # Frontend React
+│   ├── src/            # Código fuente
+│   └── dist/           # Build (generado)
+├── src/                # Backend Node.js
+│   ├── routes/         # API routes
+│   ├── services/       # Servicios
+│   └── server.js       # Servidor principal
+├── app.js              # Punto de entrada
+├── package.json
+├── config.env
+└── [documentación]
+```
+
 ## 🏗️ Arquitectura
 
 ### Desarrollo
@@ -113,12 +110,18 @@ Node.js Server (Port 3001)
 
 ```bash
 # 1. Preparar el proyecto
-cd backend
 ./deploy.sh
 
 # 2. Subir a cPanel
-# Seguir guía en backend/CPANEL_PASO_A_PASO.md
+# Seguir guía en CPANEL_PASO_A_PASO.md
 ```
+
+**Archivos a subir:**
+- `app.js` - Punto de entrada
+- `src/` - Backend
+- `client/dist/` - Frontend construido
+- `package.json`
+- `config.env`
 
 ## 🔄 Comandos Principales
 
@@ -151,25 +154,11 @@ Ver `CONTRIBUTING.md` para detalles sobre cómo contribuir al proyecto.
 
 MIT
 
-## 🔗 Enlaces Útiles
-
-- **Documentación Completa**: `backend/README.md`
-- **Guía de Despliegue**: `backend/DEPLOY_CPANEL.md`
-- **Inicio Rápido**: `backend/INICIO_RAPIDO.md`
-
 ---
 
 **Para empezar ahora:**
 
 ```bash
-cd backend
-cat INICIO_RAPIDO.md
-```
-
-O directamente:
-
-```bash
-cd backend
 npm run install:all
 ./start-dev.sh
 ```

@@ -5,10 +5,14 @@ Guía rápida para empezar a trabajar con el proyecto.
 ## ⚡ Instalación Rápida
 
 ```bash
-# 1. Instalar todas las dependencias
+# 1. Clonar el repositorio (si aún no lo has hecho)
+git clone https://github.com/tu-usuario/balanceChile.git
+cd balanceChile
+
+# 2. Instalar todas las dependencias
 npm run install:all
 
-# 2. Iniciar en modo desarrollo
+# 3. Iniciar en modo desarrollo
 ./start-dev.sh
 ```
 
@@ -55,7 +59,7 @@ NODE_ENV=production npm start
 ## 📁 Estructura Simplificada
 
 ```
-backend/
+balanceChile/
 ├── client/              # Frontend React
 │   ├── src/            # Código fuente
 │   └── dist/           # Build de producción
@@ -63,6 +67,7 @@ backend/
 │   ├── routes/         # Rutas API
 │   ├── services/       # Lógica de negocio
 │   └── server.js       # Servidor principal
+├── app.js              # Punto de entrada
 ├── config.env          # Variables de entorno
 └── package.json        # Dependencias y scripts
 ```
