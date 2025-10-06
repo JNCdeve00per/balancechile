@@ -3,26 +3,66 @@ name: Deploy to VPS
 on:
   push:
     branches: [ main, master ]
+  workflow_dispatch:  # Permite ejecutar manualmente
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    environment: dev
+    environment: production
     
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
       
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install Backend Dependencies
+      run: |
+        echo "📦 Instalando dependencias del backend..."
+        npm ci --production
+        echo "✅ Dependencias del backend instaladas"
+    
+    - name: Install Frontend Dependencies
+      run: |
+        echo "📦 Instalando dependencias del frontend..."
+        cd client
+        npm ci
+        echo "✅ Dependencias del frontend instaladas"
+    
+    - name: Build Frontend
+      run: |
+        echo "🏗️  Construyendo frontend..."
+        cd client
+        npm run build
+        echo "✅ Frontend construido exitosamente"
+        ls -lh dist/assets/ | head -5
+      
     - name: Prepare deployment files
       run: |
+        echo "📦 Preparando archivos para despliegue..."
         # Create a clean deployment directory
         mkdir -p deploy-temp
         # Copy files excluding unwanted directories
-        rsync -av --exclude='.git' --exclude='node_modules' --exclude='.env*' --exclude='logs' --exclude='*.log' --exclude='deploy-temp' . deploy-temp/
+        rsync -av \
+          --exclude='.git' \
+          --exclude='node_modules' \
+          --exclude='client/node_modules' \
+          --exclude='.env*' \
+          --exclude='logs' \
+          --exclude='*.log' \
+          --exclude='deploy-temp' \
+          --exclude='client/src' \
+          --exclude='tests' \
+          . deploy-temp/
         # Create tar.gz for deployment
         cd deploy-temp
         tar -czf ../deployment.tar.gz .
         cd ..
+        echo "✅ Archivos preparados ($(du -h deployment.tar.gz | cut -f1))"
 
     - name: Copy files to VPS
       uses: appleboy/scp-action@v0.1.7
@@ -44,97 +84,106 @@ jobs:
         key: ${{ secrets.VPS_SSH_KEY }}
         port: ${{ secrets.VPS_PORT || 22 }}
         script: |
-          # Navegar al directorio del proyecto Balance Chile
+          echo "🚀 Iniciando despliegue en VPS..."
+          
+          # Navegar al directorio del proyecto
           cd /home/nicolic3/balancechile.nicolich.cl/
-          whoami
-          pwd
-          ls -la
+          echo "📍 Directorio: $(pwd)"
+          echo "👤 Usuario: $(whoami)"
           
-          # Configurar variables de entorno para producción
+          # Configurar variables de entorno
           export NODE_ENV=production
-          echo "🔧 NODE_ENV configurado como: $NODE_ENV"
+          echo "🔧 NODE_ENV: $NODE_ENV"
           
-          # Extraer archivo de despliegue si existe
+          # Extraer archivo de despliegue
           if [ -f "deployment.tar.gz" ]; then
-            echo "📦 Extrayendo archivo de despliegue..."
+            echo "📦 Extrayendo archivos..."
             tar -xzf deployment.tar.gz
             rm deployment.tar.gz
-            echo "✅ Archivo extraído exitosamente"
+            echo "✅ Archivos extraídos"
           else
-            echo "ℹ️  No se encontró deployment.tar.gz, continuando con archivos existentes"
+            echo "❌ Error: deployment.tar.gz no encontrado"
+            exit 1
           fi
           
-          # Verificar si npm está disponible
-          if command -v npm >/dev/null 2>&1; then
-            echo "📦 Instalando dependencias del backend..."
-            cd backend
-            npm ci --production --silent
-            echo "✅ Dependencias del backend instaladas"
-            
-            echo "📦 Instalando dependencias del frontend..."
-            cd ../frontend
-            npm ci --production --silent
-            echo "✅ Dependencias del frontend instaladas"
-            
-            echo "🏗️  Construyendo aplicación frontend..."
-            npm run build
-            echo "✅ Frontend construido exitosamente"
-            
-            cd ..
-            
-            # Verificar dependencias específicas
-            echo "🔍 Verificando dependencias críticas..."
-            cd backend
-            npm list express cors helmet compression || npm install express cors helmet compression
-            npm list axios node-cron swagger-jsdoc swagger-ui-express || npm install axios node-cron swagger-jsdoc swagger-ui-express
-            cd ..
+          # Verificar que npm está disponible
+          if ! command -v npm >/dev/null 2>&1; then
+            echo "❌ Error: npm no está disponible"
+            echo "💡 Instala Node.js en el servidor"
+            exit 1
+          fi
+          
+          echo "📦 Node.js: $(node --version)"
+          echo "📦 npm: $(npm --version)"
+          
+          # Instalar dependencias del backend (solo producción)
+          echo "📦 Instalando dependencias del backend..."
+          npm install --production --no-audit --no-fund
+          
+          # Verificar que cheerio se instaló (crítico para BCN)
+          if [ -d "node_modules/cheerio" ]; then
+            echo "✅ cheerio instalado correctamente"
           else
-            echo "⚠️  npm no está disponible en el servidor"
-            echo "💡 Instrucciones para instalar dependencias:"
-            echo "   1. Accede a cPanel"
-            echo "   2. Ve a 'Node.js Selector' o 'Node.js Apps'"
-            echo "   3. Selecciona tu aplicación Balance Chile"
-            echo "   4. Ejecuta: cd backend && npm install --production"
-            echo "   5. Ejecuta: cd ../frontend && npm install --production && npm run build"
-            echo "   6. Reinicia la aplicación desde cPanel"
+            echo "⚠️  cheerio no encontrado, instalando..."
+            npm install cheerio --production
           fi
           
-          # Verificar archivos importantes del proyecto
-          echo "📋 Verificando estructura del proyecto Balance Chile..."
-          if [ -f "package.json" ]; then
-            echo "✅ package.json raíz encontrado"
-          fi
-          if [ -f "backend/package.json" ]; then
-            echo "✅ backend/package.json encontrado"
-          fi
-          if [ -f "frontend/package.json" ]; then
-            echo "✅ frontend/package.json encontrado"
-          fi
-          if [ -f "backend/src/server.js" ]; then
-            echo "✅ Servidor backend encontrado"
-          fi
-          if [ -f "frontend/dist/index.html" ] || [ -f "frontend/build/index.html" ]; then
-            echo "✅ Build del frontend encontrado"
-          fi
-          if [ -f "docker-compose.yml" ]; then
-            echo "✅ docker-compose.yml encontrado"
-          fi
-          if [ -f "backend/config.env" ]; then
-            echo "✅ Configuración del backend encontrada"
+          # Verificar estructura del build del frontend
+          echo "🔍 Verificando build del frontend..."
+          if [ -d "client/dist" ]; then
+            echo "✅ client/dist/ encontrado"
+            if [ -f "client/dist/index.html" ]; then
+              echo "✅ client/dist/index.html encontrado"
+            else
+              echo "❌ Error: client/dist/index.html no encontrado"
+              exit 1
+            fi
+            if [ -d "client/dist/assets" ]; then
+              echo "✅ client/dist/assets/ encontrado"
+              echo "📊 Archivos en assets:"
+              ls -lh client/dist/assets/ | head -5
+            else
+              echo "❌ Error: client/dist/assets/ no encontrado"
+              exit 1
+            fi
           else
-            echo "⚠️  backend/config.env no encontrado - asegúrate de configurarlo en cPanel"
+            echo "❌ Error: client/dist/ no encontrado"
+            echo "💡 El build del frontend debe estar incluido en el deployment"
+            exit 1
           fi
           
-          # Verificar archivos de documentación
-          if [ -f "README.md" ]; then
-            echo "✅ README.md encontrado"
-          fi
-          if [ -f "INTEGRACION_APIS.md" ]; then
-            echo "✅ Documentación de APIs encontrada"
+          # Verificar archivos críticos
+          echo "🔍 Verificando archivos críticos..."
+          [ -f "app.js" ] && echo "✅ app.js" || echo "❌ app.js"
+          [ -f "src/server.js" ] && echo "✅ src/server.js" || echo "❌ src/server.js"
+          [ -f "src/services/bcnService.js" ] && echo "✅ bcnService.js" || echo "❌ bcnService.js"
+          [ -f "package.json" ] && echo "✅ package.json" || echo "❌ package.json"
+          
+          # Verificar configuración
+          if [ -f "config.env" ]; then
+            echo "✅ config.env encontrado"
+          else
+            echo "⚠️  config.env no encontrado (normal si está en .gitignore)"
           fi
           
-          echo "🎉 ¡Despliegue de Balance Chile completado!"
+          # Crear directorio tmp si no existe (para restart)
+          mkdir -p tmp
+          
+          # Reiniciar aplicación (LiteSpeed)
+          echo "🔄 Reiniciando aplicación..."
+          touch tmp/restart.txt
+          
+          echo ""
+          echo "✅ ¡DESPLIEGUE COMPLETADO!"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🌐 URL: https://balancechile.nicolich.cl"
           echo "📍 Directorio: /home/nicolic3/balancechile.nicolich.cl/"
-          echo "🔗 Siguiente paso: Reinicia la aplicación desde cPanel Node.js"
-          echo "📊 Proyecto: Sistema de visualización de presupuesto chileno"
-          echo "🏗️  Arquitectura: React Frontend + Node.js Backend + APIs gubernamentales"
+          echo "🔧 Node.js: $(node --version)"
+          echo "📦 Dependencias: Instaladas"
+          echo "🎨 Frontend: Build incluido"
+          echo "🔄 Estado: Aplicación reiniciada"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "💡 Verificar en: https://balancechile.nicolich.cl"
+          echo "📊 Health check: https://balancechile.nicolich.cl/health"
+          echo "📚 API Docs: https://balancechile.nicolich.cl/api-docs"
