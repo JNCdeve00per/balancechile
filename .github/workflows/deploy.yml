@@ -23,14 +23,14 @@ jobs:
     - name: Install Backend Dependencies
       run: |
         echo "📦 Instalando dependencias del backend..."
-        npm ci --production
+        npm install --production
         echo "✅ Dependencias del backend instaladas"
     
     - name: Install Frontend Dependencies
       run: |
         echo "📦 Instalando dependencias del frontend..."
         cd client
-        npm ci
+        npm install
         echo "✅ Dependencias del frontend instaladas"
     
     - name: Build Frontend
